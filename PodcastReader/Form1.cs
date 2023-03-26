@@ -62,6 +62,9 @@ namespace PodcastReader
         }
         private void btnRemoveRssFeed_Click(object sender, EventArgs e)
         {
+            if(lstRssFeeds.SelectedItems.Count==0)
+                return;
+            
             RssFeed r = (RssFeed)lstRssFeeds.SelectedItem;
             _settings.RssFeeds.Remove(r);
             _settings.Serialize();
@@ -75,6 +78,17 @@ namespace PodcastReader
                 AddInfo(feed.FeedUrl);
                 feed.Load();
             }
+
+            var selectedIndex = int.MinValue;
+            if(lstRssFeeds.SelectedItems.Count==1)
+                selectedIndex= lstRssFeeds.SelectedIndex;
+            
+            lstRssFeeds.DataSource = null;
+            lstRssFeeds.DataSource = _settings.RssFeeds;
+            
+            if(selectedIndex!=int.MinValue)
+                lstRssFeeds.SelectedIndex = selectedIndex;
+            
             AddInfo("Feeds refreshed");
             _settings.Serialize();
         }
@@ -162,8 +176,6 @@ namespace PodcastReader
             string[] param = { _selectedRssItem.Url, file };
             Thread t = new Thread(DownloadFile);
             t.Start(param);
-            //DownloadFile(_selectedRssItem.url, file);
-
         }
 
         private void lstItems_MouseDown(object sender, MouseEventArgs e)
@@ -173,12 +185,6 @@ namespace PodcastReader
             if (index != ListBox.NoMatches)
             {
                 _selectedRssItem = (RssItem)lstItems.Items[index];
-                //collectionRoundMenuStrip.Show(Cursor.Position);
-                //collectionRoundMenuStrip.Visible = true;
-            }
-            else
-            {
-                //collectionRoundMenuStrip.Visible = false;
             }
         }
 
@@ -191,6 +197,7 @@ namespace PodcastReader
         {
             AddInfo("Refreshing "+ _selectedRssFeed.FeedUrl);
                 _selectedRssFeed.Load();
+                lstRssFeeds_SelectedIndexChanged(this, null);
             AddInfo("Feed refreshed");
             _settings.Serialize();
         }
@@ -202,12 +209,6 @@ namespace PodcastReader
             if (index != ListBox.NoMatches)
             {
                 _selectedRssFeed = (RssFeed)lstRssFeeds.Items[index];
-                //collectionRoundMenuStrip.Show(Cursor.Position);
-                //collectionRoundMenuStrip.Visible = true;
-            }
-            else
-            {
-                //collectionRoundMenuStrip.Visible = false;
             }
         }
         #endregion
@@ -273,19 +274,6 @@ namespace PodcastReader
             this.InvokeOnUiThreadIfRequired(() => lstInfo.SelectedIndex = lstInfo.Items.Count - 1);
 
         }
-
-        //private string removeIllegalCharacters(string str)
-        //{
-        //    string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-
-        //    foreach (char c in invalid)
-        //    {
-        //        str = str.Replace(c.ToString(), "");
-        //    }
-        //    return str;
-        //}
-
-        
         private void splitFeeds_SplitterMoved(object sender, SplitterEventArgs e)
         {
             if (!_enableSaveSplitterDistance)
